@@ -1,0 +1,12 @@
+# Node
+node_modules
+.env
+
+# React
+frontend/node_modules
+frontend/.env
+build
+
+# Others
+.DS_Store
+dist
