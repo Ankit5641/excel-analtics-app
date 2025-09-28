@@ -12,7 +12,7 @@ function Files() {
   const [dataLoading, setDataLoading] = useState(false);
 
   useEffect(() => {
-    axios.get("http://localhost:1000/api/upload")
+    axios.get("/upload")
       .then(res => {
         setFiles(res.data);
         setLoading(false);
@@ -25,7 +25,7 @@ function Files() {
     setDataLoading(true);
     setFileData([]);
     try {
-      const res = await axios.get(`http://localhost:1000/api/upload/${fileId}`);
+      const res = await axios.get(`/upload/${fileId}`);
       setSelectedFile(res.data);
       setFileData(res.data.data); // .data array contains the Excel rows
     } catch (err) {
@@ -38,7 +38,7 @@ function Files() {
   const handleDeleteFile = async (fileId) => {
     if (!window.confirm("Are you sure you want to delete this file?")) return;
     try {
-      await axios.delete(`http://localhost:1000/api/upload/${fileId}`);
+      await axios.delete(`/upload/${fileId}`);
       setFiles(files.filter(file => file._id !== fileId));
     } catch (err) {
       alert("Failed to delete file.");
