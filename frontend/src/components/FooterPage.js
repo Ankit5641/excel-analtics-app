@@ -8,8 +8,8 @@ function FooterPage() {
         <BackButton />
       <div className="footerpage-details">
         <b>Excel Work Project</b> &copy; {new Date().getFullYear()}<br />
-        Designed by Vickey yadav<br />
-        Contact: <a href="vickeyyadav0088@gmail.com">vickeyyadav0088@gmail.com</a>
+        Designed by Ankit Singh<br />
+        Contact: <a href="ankitrajput5641@gmail.com">ankitrajput5641@gmail.com</a>
       </div>
     </div>
   );
