@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import axios from "axios";
 import BackButton from "../components/BackButton";
 import "../styles/Upload.css";
+import API from "../services/API"; // Make sure API has Render backend URL
+
 
 function Upload() {
   const [file, setFile] = useState(null);
@@ -23,7 +25,7 @@ function Upload() {
     formData.append("excel", file);
 
     try {
-      await axios.post("http://localhost:1000/api/upload", formData, {
+      await axios.post("/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       setMessage("File uploaded and saved to database successfully!");

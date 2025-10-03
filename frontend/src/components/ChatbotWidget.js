@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
+import API from "../services/API"; // Axios instance pointing to your Render backend
 
 const botImg = "https://img.icons8.com/fluency/96/000000/robot-2.png";
-const OPENAI_API_KEY = "5465b5f746msh96e92153a7366cep165cf4jsn9c421897c482"; // <-- Replace with your OpenAI key
 
 const CHAT_WIDTH = 340;
 const CHAT_HEIGHT = 420;
@@ -16,7 +16,6 @@ const ChatbotWidget = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Shared position for both icon and chatbox
   const [position, setPosition] = useState({
     x: window.innerWidth - ICON_SIZE - PADDING,
     y: window.innerHeight - ICON_SIZE - PADDING
@@ -43,7 +42,7 @@ const ChatbotWidget = () => {
     if (chatEndRef.current) chatEndRef.current.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  // Drag Handlers (for both icon and chatbox)
+  // Drag handlers
   const onMouseDown = (e, type) => {
     if (e.button !== 0) return;
     const rect = (type === "icon" ? iconRef : widgetRef).current.getBoundingClientRect();
@@ -83,68 +82,32 @@ const ChatbotWidget = () => {
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
     };
-    // eslint-disable-next-line
   }, [dragging, rel]);
 
-  // OpenAI Integration
- const handleSend = async () => {
-  if (!input.trim() || loading) return;
-  const userMsg = input;
-  setMessages(prev => [...prev, { from: "user", text: userMsg }]);
-  setInput("");
-  setLoading(true);
+  // Send message to backend
+  const handleSend = async () => {
+    if (!input.trim() || loading) return;
+    const userMsg = input;
+    setMessages(prev => [...prev, { from: "user", text: userMsg }]);
+    setInput("");
+    setLoading(true);
 
-  try {
-    const response = await fetch("https://openai80.p.rapidapi.com/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-RapidAPI-Key": OPENAI_API_KEY,
-        "X-RapidAPI-Host": "openai80.p.rapidapi.com"
-      },
-      body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: "You are an AI assistant that helps users with Excel, charts, and spreadsheet tasks."
-          },
-          {
-            role: "user",
-            content: userMsg
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 200
-      })
-    });
-
-    const data = await response.json();
-    console.log("API response:", data); // <--- DEBUG HERE
-
-    if (data && data.choices && data.choices.length > 0) {
-      const reply = data.choices[0].message.content.trim();
+    try {
+      const res = await API.post("/chatbot", { message: userMsg }); // Calls your backend route
+      const reply = res.data.choices?.[0]?.message?.content?.trim() || "No response from bot.";
       setMessages(prev => [...prev, { from: "bot", text: reply }]);
-    } else if (data.error) {
-      setMessages(prev => [...prev, { from: "bot", text: `Error: ${data.error.message}` }]);
-    } else {
-      setMessages(prev => [...prev, { from: "bot", text: "No proper response. Try again later." }]);
+    } catch (err) {
+      console.error(err);
+      setMessages(prev => [...prev, { from: "bot", text: "Bot failed to respond. Try again later." }]);
     }
 
-  } catch (error) {
-    console.error("Fetch error:", error);
-    setMessages(prev => [...prev, { from: "bot", text: "Could not reach the server. Check internet or key." }]);
-  }
-
-  setLoading(false);
-};
-
+    setLoading(false);
+  };
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") handleSend();
   };
 
-  // Styles
   const iconStyle = {
     position: "fixed",
     left: position.x,
@@ -176,7 +139,6 @@ const ChatbotWidget = () => {
 
   return (
     <>
-      {/* Floating Bot Icon */}
       {!open && (
         <div
           ref={iconRef}
@@ -192,8 +154,7 @@ const ChatbotWidget = () => {
               borderRadius: "50%",
               padding: 0,
               width: ICON_SIZE,
-              height: ICON_SIZE,
-              transition: "box-shadow 0.2s"
+              height: ICON_SIZE
             }}
             aria-label="Open Chatbot"
             onClick={() => setOpen(true)}
@@ -208,10 +169,8 @@ const ChatbotWidget = () => {
         </div>
       )}
 
-      {/* Chatbox */}
       {open && (
         <div ref={widgetRef} style={chatStyle}>
-          {/* Header (Drag handle) */}
           <div
             onMouseDown={e => onMouseDown(e, "chat")}
             style={{
@@ -241,15 +200,7 @@ const ChatbotWidget = () => {
               onClick={() => setOpen(false)}
             >×</button>
           </div>
-          {/* Chat Body */}
-          <div
-            style={{
-              flex: 1,
-              background: "#f7f7fc",
-              padding: "1rem",
-              overflowY: "auto"
-            }}
-          >
+          <div style={{ flex: 1, background: "#f7f7fc", padding: "1rem", overflowY: "auto" }}>
             {messages.map((msg, idx) => (
               <div
                 key={idx}
@@ -261,7 +212,7 @@ const ChatbotWidget = () => {
               >
                 <div
                   style={{
-                    background: msg.from === "user" ? "#e2e8f0" : "#e2e8f0",
+                    background: "#e2e8f0",
                     color: msg.from === "user" ? "green" : "black",
                     borderRadius: "16px",
                     padding: "0.7em 1.1em",
@@ -274,50 +225,22 @@ const ChatbotWidget = () => {
                 </div>
               </div>
             ))}
-            {loading && (
-              <div style={{ color: "#43B02A", fontStyle: "italic", marginLeft: 5 }}>Bot is typing...</div>
-            )}
+            {loading && <div style={{ color: "#43B02A", fontStyle: "italic", marginLeft: 5 }}>Bot is typing...</div>}
             <div ref={chatEndRef} />
           </div>
-          {/* Input */}
-          <div
-            style={{
-              borderTop: "1px solid black",
-              display: "flex",
-              padding: "0.7rem",
-              background: "#fff"
-            }}
-          >
+          <div style={{ borderTop: "1px solid black", display: "flex", padding: "0.7rem", background: "#fff" }}>
             <input
               type="text"
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Ask about your charts..."
-              style={{
-                flex: 1,
-                border: "1px solid rgb(13, 14, 14)",
-                borderRadius: "16px",
-                padding: "0.5em 1em",
-                fontSize: "1rem",
-                outline: "none",
-                color: "#000"
-              }}
+              style={{ flex: 1, border: "1px solid rgb(13,14,14)", borderRadius: "16px", padding: "0.5em 1em", fontSize: "1rem", outline: "none", color: "#000" }}
               disabled={loading}
             />
             <button
               onClick={handleSend}
-              style={{
-                marginLeft: 8,
-                background: "#43B02A",
-                color: "black",
-                border: "none",
-                borderRadius: "16px",
-                padding: "0.5em 1.3em",
-                fontWeight: "bold",
-                fontSize: "1rem",
-                cursor: "pointer"
-              }}
+              style={{ marginLeft: 8, background: "#43B02A", color: "black", border: "none", borderRadius: "16px", padding: "0.5em 1.3em", fontWeight: "bold", fontSize: "1rem", cursor: "pointer" }}
               disabled={loading}
             >
               Send

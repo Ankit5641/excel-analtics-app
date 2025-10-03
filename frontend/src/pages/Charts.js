@@ -25,14 +25,14 @@ function Charts() {
   const chartRef = useRef(null); // for download
 
   useEffect(() => {
-    axios.get("http://localhost:1000/api/upload")
+    axios.get("/upload")
       .then(res => setFiles(res.data))
       .catch(() => setFiles([]));
   }, []);
 
   useEffect(() => {
     if (selectedFileId) {
-      axios.get(`http://localhost:1000/api/upload/${selectedFileId}`)
+      axios.get(`/upload/${selectedFileId}`)
         .then(res => {
           setExcelData(res.data.data || []);
           if (res.data.data && res.data.data.length) {

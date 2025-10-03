@@ -43,10 +43,10 @@ const Content = () => {
       <br/>
       <div className="footer-grid">
         <ul>
-          <li>Developer: Vickey Yadav</li>
+          <li>Developer: Ankit Kumar Singh</li>
           <li>© Copyright</li>
-          <li>Email: vickeyyadav@gmail.com</li>
-          <li>Call me: 8882689XXXX</li>
+          <li>Email: ankitrajput5641@gmail.com</li>
+          <li>Call me: 7979027302</li>
           <li>Thank You....!</li>
         </ul>
       </div>
